@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Weather App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Link your CSS -->
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <div class="search">
+          <input type="text" placeholder="Enter city name" spellcheck="false">
+          <button><img src="images/search.png" alt="Search Icon"></button>
+        </div>
+        <div class="weather">
+          <!-- Weather Icon -->
+          <img src="images/rain.png" class="weather-icon" alt="Weather Icon">
+          <!-- Current Temperature -->
+          <h1 class="temp">Temp°c</h1>
+          <!-- City Name -->
+          <h2 class="city">City</h2>
+          <!-- Details Section -->
+          <div class="details">
+            <div class="col">
+              <img src="images/humidity.png" alt="Humidity Icon">
+              <div>
+                <p class="humidity">50%</p>
+                <p>Humidity</p>
+              </div>
+            </div>
+            <div class="col">
+              <img src="images/wind.png" alt="Wind Icon">
+              <div>
+                <p class="wind">15 km/h</p>
+                <p>Wind Speed</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Forecast Container -->
+        <div class="forecast">
+          <h3>Next Forecasts:</h3>
+          <div class="forecast-cards"><!-- JS will populate this --></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const apiKey = "34b5a9af9360c5836d3c7504dee66445";
+      // Endpoints for current weather and 5 day/3-hour forecast
+      const currentWeatherUrl = "https://api.openweathermap.org/data/2.5/weather?units=metric&q=";
+      const forecastWeatherUrl = "https://api.openweathermap.org/data/2.5/forecast?q=";
+
+      const searchBox = document.querySelector(".search input");
+      const searchBtn = document.querySelector(".search button");
+
+      async function checkWeather(city) {
+        try {
+          // Fetch current weather data
+          const currentResponse = await fetch(currentWeatherUrl + city + `&appid=${apiKey}`);
+          const currentData = await currentResponse.json();
+
+          // Update current weather UI
+          document.querySelector(".city").innerHTML = currentData.name;
+          document.querySelector(".temp").innerHTML = Math.round(currentData.main.temp) + "°c";
+          document.querySelector(".humidity").innerHTML = currentData.main.humidity + "%";
+          document.querySelector(".wind").innerHTML = currentData.wind.speed + " km/h";
+
+          // (Optional) Update the weather icon based on currentData.weather[0].icon
+          // For example:
+          // const iconCode = currentData.weather[0].icon;
+          // document.querySelector(".weather-icon").src = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+
+          // Fetch forecast weather data
+          const forecastResponse = await fetch(forecastWeatherUrl + city + `&units=metric&appid=${apiKey}`);
+          const forecastData = await forecastResponse.json();
+
+          // Update forecast UI
+          const forecastContainer = document.querySelector(".forecast-cards");
+          // Clear previous content
+          forecastContainer.innerHTML = "";
+
+          // Display the next 3 forecast entries
+          for (let i = 0; i < 3; i++) {
+            const item = forecastData.list[i];
+            const time = item.dt_txt;
+            const temp = Math.round(item.main.temp) + "°C";
+            const desc = item.weather[0].description;
+
+            // Create a forecast card
+            const forecastCard = document.createElement("div");
+            forecastCard.classList.add("forecast-card");
+            forecastCard.innerHTML = `
+              <h4>${time}</h4>
+              <p class="forecast-temp">${temp}</p>
+              <p class="forecast-desc">${desc}</p>
+            `;
+            forecastContainer.appendChild(forecastCard);
+          }
+
+        } catch (error) {
+          console.error("Error fetching weather data:", error);
+          alert("Could not retrieve weather data. Please check the city name and try again.");
+        }
+      }
+
+      // Add event listener to the search button
+      searchBtn.addEventListener("click", () => {
+        const city = searchBox.value;
+        if (city) {
+          checkWeather(city);
+        } else {
+          alert("Please enter a city name.");
+        }
+      });
+    </script>
+  </body>
+</html>
